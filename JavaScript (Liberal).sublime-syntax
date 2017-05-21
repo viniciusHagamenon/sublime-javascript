@@ -58,6 +58,7 @@ contexts:
   expression:
     - include: arrow-function-definition
     - include: operator-without-preceding-operand
+    - include: styled-components
     - include: jsx
     - include: literal
     - include: function-call
@@ -103,6 +104,63 @@ contexts:
   semicolon:
     - match: ;
       scope: punctuation.terminator.js
+
+  styled-components:
+    - match: (?<!\.)\b(injectGlobal|keyframes)\s*(`)
+      captures:
+        1: variable.function.tagged-template.js
+        2: punctuation.definition.string.template.begin.js
+      push:
+        - meta_scope: meta.styled-components.js
+        - meta_content_scope: source.css.embedded.js
+        - match: "`"
+          captures:
+            0: punctuation.definition.string.template.end.js
+          pop: true
+        - include: scope:source.js.css
+    - match: '(?<!\.)\b(styled)(\.)([_$a-zA-Z][$\w]*)\s*(`)'
+      captures:
+        1: variable.other.object.js
+        2: punctuation.accessor.js
+        3: variable.function.tagged-template.js
+        4: punctuation.definition.string.template.begin.js
+      push:
+        - meta_scope: meta.styled-components.js
+        - meta_content_scope: source.css.embedded.js
+        - match: "`"
+          captures:
+            0: punctuation.definition.string.template.end.js
+          pop: true
+        - include: scope:source.js.css
+    - match: '(?<!\.)\b(styled)\s*(?=(\((?>(?>[^()]+)|\g<-1>)*\))\s*`)'
+      captures:
+        1: meta.function-call.with-arguments.js variable.function.js
+      push:
+        - meta_scope: meta.styled-components.js
+        - match: (?<=`)
+          captures:
+            1: meta.function-call.with-arguments.js variable.function.js
+          pop: true
+        - match: \(
+          captures:
+            0: punctuation.definition.group.begin.js
+          push:
+            - meta_scope: meta.function-call.with-arguments.js meta.group.js
+            - match: \)
+              captures:
+                0: punctuation.definition.group.end.js
+              pop: true
+            - include: expression
+        - match: "`"
+          captures:
+            0: punctuation.definition.string.template.begin.js
+          push:
+            - meta_content_scope: source.css.embedded.js
+            - match: "`"
+              captures:
+                0: punctuation.definition.string.template.end.js
+              pop: true
+            - include: scope:source.js.css
 
   jsx:
     - match: (<)({{identifier}}(\.{{identifier}})*)
